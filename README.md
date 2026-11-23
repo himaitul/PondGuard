@@ -1,126 +1,263 @@
+
 # PondGuard
 ## A TCP/UDP-Based Intelligent Fish Pond Monitoring System
 
-PondGuard is a Python-based fish pond monitoring application developed for a Computer Networks course project.
+**Course:** Computer Networks  
+**Assignment:** Assignment No. 4
 
-It demonstrates UDP sensor communication, TCP client-server communication, socket programming, JSON-based data exchange, and an autonomous Agentic AI decision system.
+## 1. Introduction
 
-## Project Objectives
+PondGuard is a Python-based fish pond monitoring application developed to demonstrate TCP and UDP communication through a practical client-server networking system.
+
+The application uses UDP to transmit simulated sensor readings and TCP to provide reliable monitoring and control commands.
+
+It also integrates an autonomous Agentic AI decision controller that analyzes water-quality readings and manages a virtual aerator.
+
+## 2. Problem Statement
+
+Fish ponds require continuous monitoring of water quality. Low dissolved oxygen, abnormal temperature, and unsuitable pH levels can create risks for aquatic life.
+
+PondGuard demonstrates how network communication and autonomous decision-making can support a fish pond monitoring application.
+
+## 3. Project Objectives
 
 - Demonstrate UDP communication for sensor data transmission.
-- Demonstrate TCP communication for reliable client-server commands.
+- Implement TCP client-server communication.
+- Apply Python socket programming.
 - Monitor simulated fish pond water-quality readings.
 - Detect abnormal temperature, pH, and dissolved oxygen levels.
-- Use an autonomous agent to manage a virtual aerator.
-- Demonstrate human approval for stopping aeration.
+- Demonstrate UDP packet validation and sequence-gap detection.
+- Integrate an autonomous Agentic AI decision controller.
+- Demonstrate virtual aerator control and human approval.
 
-## System Architecture
+## 4. System Architecture
 
-```text
-Simulated Sensor
-      |
-      | UDP (Port 9000)
-      v
-PondGuard Server
-      |
-      | Data Validation
-      | Water Quality Monitoring
-      | Agentic AI Decision Engine
-      | Virtual Aerator Controller
-      |
-      ^ TCP (Port 9001)
-      |
-TCP Client
-LAST / STATS / ALERTS / AGENT / LOG
-APPROVE_STOP / REJECT_STOP
+PondGuard uses separate UDP and TCP communication channels.
+
+### Network Configuration
+
+| Component | Protocol | IP Address | Port |
+|---|---|---|---|
+| Sensor Simulator | UDP | 127.0.0.1 | 9000 |
+| Monitoring Server | UDP Receiver | 127.0.0.1 | 9000 |
+| Monitoring Client | TCP | 127.0.0.1 | 9001 |
+| Monitoring Server | TCP Server | 127.0.0.1 | 9001 |
+
+### Communication Flow
+
+1. The sensor simulator generates water-quality readings.
+2. Sensor readings are transmitted using UDP.
+3. The server receives and validates incoming packets.
+4. The Agentic AI controller analyzes the readings.
+5. Monitoring clients connect through TCP.
+6. Clients request statistics, alerts, agent status, and logs.
+7. The server returns responses through TCP.
+
+## 5. UDP Implementation
+
+**UDP Port: 9000**
+
+UDP is used for sensor data transmission.
+
+Each JSON packet contains:
+
+- Sequence number
+- Temperature
+- pH
+- Dissolved oxygen
+
+Example:
+
+```json
+{
+  "seq": 1,
+  "temp": 25.0,
+  "ph": 7.2,
+  "oxygen": 6.0
+}
 ```
 
-## Network Protocol Implementation
+### UDP Features Demonstrated
 
-### UDP
-- UDP server listens on port 9000.
-- Simulated sensors send JSON datagrams.
-- Each packet contains sequence number, temperature, pH, and dissolved oxygen.
-- The server validates incoming packets and detects sequence gaps.
+- UDP socket creation and binding.
+- Datagram transmission and reception.
+- JSON packet parsing.
+- Sensor data validation.
+- Sequence-number monitoring.
+- Detection of possible missing packets.
+- Rejection of malformed JSON and invalid sensor data.
 
-### TCP
-- TCP server listens on port 9001.
-- Client sends commands through TCP sockets.
-- Server returns JSON responses.
+### Why UDP?
 
-Supported commands:
-- LAST
-- STATS
-- ALERTS
-- AGENT
-- LOG
-- AERATOR_STATE
-- APPROVE_STOP
-- REJECT_STOP
+UDP provides connectionless datagram communication with low protocol overhead. It is suitable for demonstrating sensor telemetry without establishing a TCP connection for every reading.
 
-## Agentic AI Integration
+UDP does not guarantee delivery, ordering, or retransmission. PondGuard uses sequence numbers to identify possible gaps in received packets.
 
-The autonomous agent:
-1. Analyzes sensor readings.
-2. Evaluates oxygen trends and water-quality risks.
-3. Switches the virtual aerator ON when oxygen is critically low or falling.
-4. Monitors oxygen recovery.
-5. Requests human confirmation before switching the aerator OFF.
-6. Logs its actions.
+## 6. TCP Implementation
 
-The demonstrated system uses a deterministic autonomous decision engine. Optional LLM explanations require API configuration and were not enabled in the demonstration.
+**TCP Port: 9001**
 
-## Testing and Demonstration
+TCP is used for monitoring and command communication between clients and the server.
 
-**Automated tests: 21 / 21 passed.**
+The client establishes a TCP connection, sends a command, receives a response, and closes the connection.
 
-The end-to-end demonstration processed 12 simulated sensor readings and successfully demonstrated aerator activation, oxygen recovery, human approval, and shutdown.
+### Supported TCP Commands
 
-## Project Files
+| Command | Function |
+|---|---|
+| LAST | Retrieve the latest sensor reading |
+| STATS | Retrieve sensor statistics |
+| ALERTS | Retrieve active alerts |
+| AGENT | Retrieve agent status |
+| LOG | Retrieve agent action history |
+| AERATOR_STATE | Retrieve virtual aerator status |
+| APPROVE_STOP | Approve stopping the aerator |
+| REJECT_STOP | Reject stopping the aerator |
 
-- `server.py` — Main TCP/UDP server and agent logic
-- `sensor.py` — Simulated sensor
-- `client.py` — TCP client
-- `demo.py` — End-to-end demonstration
-- `automated_test.py` — Automated test suite
-- `dashboard.py` — Dashboard module
-- `server_updated.py` — Alternate server implementation
+### Why TCP?
 
-## How to Run
+TCP provides connection-oriented, reliable, ordered byte-stream communication.
+
+PondGuard uses TCP for monitoring requests and control commands where reliable communication is important.
+
+## 7. TCP vs UDP Comparison
+
+| Feature | TCP | UDP |
+|---|---|---|
+| Connection | Connection-oriented | Connectionless |
+| Reliability | Reliable delivery | No delivery guarantee |
+| Ordering | Ordered byte stream | No ordering guarantee |
+| Acknowledgment | Uses acknowledgments | No transport-level acknowledgment |
+| Retransmission | Supports retransmission | No automatic retransmission |
+| PondGuard usage | Monitoring and commands | Sensor telemetry |
+
+## 8. Agentic AI Integration
+
+PondGuard includes an autonomous decision controller that processes incoming sensor readings.
+
+Its workflow:
+
+1. Observe incoming sensor readings.
+2. Analyze water-quality conditions.
+3. Evaluate oxygen trends and risk levels.
+4. Decide whether aeration is required.
+5. Activate the virtual aerator when oxygen is critically low or falling.
+6. Monitor oxygen recovery.
+7. Request human confirmation before stopping aeration.
+8. Record decisions and actions in the action log.
+
+The demonstrated system uses a deterministic autonomous decision engine that operates without an external LLM API key.
+
+Optional LLM-based explanations require API configuration and were not enabled during the demonstration.
+
+## 9. Automated Testing and Demonstration
+
+**Verified automated test result: 21/21 tests passed in two consecutive runs.**
+
+### Networking Tests
+
+- UDP valid packet reception and counting.
+- TCP statistics retrieval.
+- TCP LAST response.
+- TCP AGENT, ALERTS, and LOG commands.
+- UDP sequence-gap detection.
+- Malformed JSON rejection.
+- Invalid sensor data rejection.
+
+### Application and Agent Tests
+
+- Low oxygen alert.
+- Temperature alert.
+- pH alert.
+- Autonomous aerator activation.
+- High-risk detection.
+- Oxygen recovery detection.
+- Stop confirmation request.
+- Human approval.
+- Aerator deactivation after approval.
+- Agent action logging.
+
+### End-to-End Demonstration
+
+The demonstration successfully processed 12 simulated sensor readings and showed:
+
+1. UDP sensor data transmission.
+2. TCP monitoring commands.
+3. Low oxygen detection.
+4. Automatic virtual aerator activation.
+5. Oxygen recovery monitoring.
+6. Human approval to stop aeration.
+7. Successful virtual aerator shutdown.
+
+## 10. Project Files
+
+| File | Description |
+|---|---|
+| `server.py` | Main TCP/UDP server and agent logic |
+| `sensor.py` | Simulated sensor |
+| `client.py` | TCP monitoring client |
+| `demo.py` | End-to-end demonstration |
+| `automated_test.py` | Automated test suite |
+| `dashboard.py` | Dashboard module |
+| `server_updated.py` | Alternate server implementation |
+| `.gitignore` | Excludes temporary and sensitive files |
+
+## 11. How to Run
+
+Run the end-to-end demonstration:
 
 ```bash
 python -u demo.py
 ```
 
-Run tests:
+Run automated tests:
 
 ```bash
 python -u automated_test.py
 ```
 
-## Technologies
+Check Python syntax:
+
+```bash
+python -m py_compile server.py sensor.py client.py demo.py automated_test.py
+```
+
+## 12. Technologies Used
 
 - Python
-- TCP and UDP sockets
+- TCP socket programming
+- UDP socket programming
 - JSON
 - Client-server architecture
 - Agentic AI decision logic
+- Automated testing
+- PowerShell
+- Git and GitHub
 
-## Limitations
+## 13. Project Limitations
 
-- Sensor readings are simulated; no physical sensor is connected.
-- The aerator is virtual; no physical hardware is controlled.
-- Demonstrated network communication uses localhost (`127.0.0.1`).
-- Optional LLM explanations were not enabled.
+- Sensor readings are simulated; no physical sensors are connected.
+- The aerator is virtual and does not control physical equipment.
+- Network communication was demonstrated locally using `127.0.0.1`.
+- UDP sequence-gap detection identifies possible missing packets but does not guarantee exact network-loss measurement.
+- Optional LLM explanations were not enabled during the reported tests.
 
-## Future Improvements
+## 14. Future Improvements
 
 - Connect real IoT sensors.
 - Deploy across multiple networked devices.
 - Integrate a physical aerator controller.
-- Enable optional LLM explanations.
-- Extend the dashboard.
+- Add historical sensor data storage.
+- Extend the monitoring dashboard.
+- Measure network performance and latency.
+- Enable optional LLM-based explanations.
 
-## Conclusion
+## 15. Conclusion
 
-PondGuard demonstrates how TCP and UDP socket programming can work together in a practical monitoring application, combining network communication, sensor-data processing, automated testing, and autonomous decision-making.
+PondGuard demonstrates the practical use of TCP and UDP protocols in a real-world-inspired monitoring application.
+
+UDP handles simulated sensor telemetry, while TCP provides reliable monitoring and command communication. The application also demonstrates packet validation, sequence-gap detection, client-server architecture, automated testing, and Agentic AI-based autonomous decision-making.
+
+The project combines Computer Networking concepts with an application addressing a real-world aquaculture monitoring problem.
+
+**Build Something. Understand the Network. Demonstrate What You Create.**
