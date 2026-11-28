@@ -285,9 +285,16 @@ class PondDashboard:
         )
         self.system_info.pack(fill="x", padx=15, pady=5)
 
-        # Bottom log section
-        bottom = tk.Frame(self.root, bg=PANEL)
-        bottom.pack(fill="both", expand=True, padx=20, pady=(5, 15))
+        # Bottom log section: reserve a stable area so the history table remains visible.
+        bottom = tk.Frame(self.root, bg=PANEL, height=190)
+        bottom.pack(
+            side="bottom",
+            fill="x",
+            expand=False,
+            padx=20,
+            pady=(5, 15)
+        )
+        bottom.pack_propagate(False)
 
         self.label(
             bottom,
@@ -301,16 +308,16 @@ class PondDashboard:
             bottom,
             columns=("time", "event", "details"),
             show="headings",
-            height=7
+            height=5
         )
 
         self.log_tree.heading("time", text="TIME")
         self.log_tree.heading("event", text="EVENT")
         self.log_tree.heading("details", text="DETAILS")
 
-        self.log_tree.column("time", width=160)
-        self.log_tree.column("event", width=210)
-        self.log_tree.column("details", width=650)
+        self.log_tree.column("time", width=160, stretch=False)
+        self.log_tree.column("event", width=210, stretch=False)
+        self.log_tree.column("details", width=650, stretch=True)
 
         self.log_tree.pack(
             fill="both",
@@ -410,29 +417,6 @@ class PondDashboard:
 
         except Exception as exc:
             self.result_queue.put(("error", str(exc)))
-
-    def process_queue(self):
-        try:
-            while True:
-                kind, payload = self.result_queue.get_nowait()
-
-                if kind == "data":
-                    self.update_dashboard(payload)
-                elif kind == "error":
-                    self.connection_label.config(
-                        text="● SERVER OFFLINE",
-                        fg=RED
-                    )
-                    self.status_bar.config(
-                        text="Connection error: " + payload
-                    )
-
-                self.busy = False
-
-        except queue.Empty:
-            pass
-
-        self.root.after(200, self.process_queue)
 
     def update_dashboard(self, data):
 

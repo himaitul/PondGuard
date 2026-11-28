@@ -204,22 +204,18 @@ The demonstration successfully processed 12 simulated sensor readings and showed
 
 ## 11. How to Run
 
-Run the end-to-end demonstration:
+### Requirements
+- Python 3 installed
+- Tkinter available for the graphical dashboard
+- No external Python packages are required for the core system.
 
+### Option 1: Run the GUI Dashboard
+
+Open three separate terminals in the project directory.
+
+**Terminal 1 — Start the Server**
 ```bash
-python -u demo.py
-```
-
-Run automated tests:
-
-```bash
-python -u automated_test.py
-```
-
-Check Python syntax:
-
-```bash
-python -m py_compile server.py sensor.py client.py demo.py automated_test.py
+python -u server.py
 ```
 
 ## 12. Technologies Used

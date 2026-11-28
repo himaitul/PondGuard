@@ -65,12 +65,55 @@ class PondAgent:
         self.last_action = "SYSTEM_STARTED"
 
         self.alerts = []
-        self.logs = []
+        self.logs = self._load_logs()
         self.active_conditions = set()
 
         self.lock = threading.RLock()
         self.llm_key = os.getenv("OPENAI_API_KEY", "")
         self.llm_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    def _load_logs(self):
+        """Load previous action-history entries from the JSONL file."""
+        loaded = []
+
+        if not LOG_FILE.exists():
+            return loaded
+
+        try:
+            with open(LOG_FILE, "r", encoding="utf-8") as f:
+                for line_number, line in enumerate(f, start=1):
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:
+                        print(
+                            f"[AGENT] Skipping invalid history line {line_number}",
+                            flush=True
+                        )
+                        continue
+
+                    if (
+                        isinstance(entry, dict)
+                        and isinstance(entry.get("timestamp"), str)
+                        and isinstance(entry.get("event"), str)
+                    ):
+                        loaded.append(entry)
+
+        except OSError as exc:
+            print("[AGENT] Could not load history:", exc, flush=True)
+            return []
+
+        # Keep the in-memory history bounded; the JSONL file remains untouched.
+        loaded = loaded[-1000:]
+        if loaded:
+            print(
+                f"[AGENT] Loaded {len(loaded)} previous history event(s).",
+                flush=True
+            )
+        return loaded
 
     def _record(self, event, **details):
         entry = {
@@ -341,6 +384,7 @@ class PondAgent:
 
                 if self.pending_stop_confirmation and oxygen < 5.5:
                     self.pending_stop_confirmation = False
+                    self.last_action = "STOP_REQUEST_CANCELLED"
 
                     self._record(
                         "STOP_REQUEST_CANCELLED",
